@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --kahoot-purple: #059669;
+  --kahoot-light-purple: #10b981;
+  --kahoot-red: #e21b3c;
+  --kahoot-blue: #064e3b;
+  --kahoot-yellow: #ffa602;
+  --kahoot-green: #26890c;
+  --background: #f0fdf4;
+  --foreground: #064e3b;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.kahoot-card {
+  @apply bg-white rounded-xl shadow-lg p-8;
+}
+
+.kahoot-button {
+  @apply px-6 py-3 rounded-lg font-bold transition-all duration-200 active:scale-95;
+}
+
+.btn-purple {
+  @apply bg-[var(--kahoot-purple)] text-white hover:bg-[var(--kahoot-light-purple)];
+}
+
+.btn-red {
+  @apply bg-[var(--kahoot-red)] text-white;
+}
+
+.btn-blue {
+  @apply bg-[var(--kahoot-blue)] text-white;
+}
+
+.btn-yellow {
+  @apply bg-[var(--kahoot-yellow)] text-white;
+}
+
+.btn-green {
+  @apply bg-[var(--kahoot-green)] text-white;
+}
+
+.option-btn {
+  @apply flex items-center justify-center text-white text-2xl font-bold min-h-[120px] rounded-lg shadow-md transition-all hover:brightness-110 active:scale-95 text-center p-4;
+}
