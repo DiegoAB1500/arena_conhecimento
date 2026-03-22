@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '@/lib/useSocket';
 import { useRouter } from 'next/navigation';
+import ConfirmModal from '@/components/ConfirmModal';
 
 const SYMBOLS = ['A', 'B', 'C', 'D'];
 const COLORS = ['bg-accent-1', 'bg-accent-2', 'bg-accent-3', 'bg-accent-4'];
@@ -11,6 +12,7 @@ export default function PlayerGame() {
     const [question, setQuestion] = useState(null);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [currentQuestionNumber, setCurrentQuestionNumber] = useState(0);
+    const [confirmExitOpen, setConfirmExitOpen] = useState(false);
     const [status, setStatus] = useState(() => {
         if (typeof window === 'undefined') return 'WAITING';
         if (sessionStorage.getItem('lastFeedback')) return 'FEEDBACK';
@@ -40,6 +42,13 @@ export default function PlayerGame() {
     useEffect(() => {
         statusRef.current = status;
     }, [status]);
+
+    const handleExitGame = () => {
+        setConfirmExitOpen(false);
+        if (socket) socket.emit('leaveGame');
+        sessionStorage.clear();
+        router.push('/');
+    };
 
     useEffect(() => {
         if (socket) {
@@ -238,13 +247,26 @@ export default function PlayerGame() {
     if (status === 'SUBMITTED') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--arena-primary-dark)] text-white p-6 text-center relative">
-                {totalQuestions > 0 && (
-                    <div className="absolute top-4 right-6">
-                        <span className="bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-black tracking-wider border border-white/30">
+                <ConfirmModal 
+                    isOpen={confirmExitOpen}
+                    message="Tem certeza que deseja sair do jogo? Suas respostas não serão mais contabilizadas."
+                    onConfirm={handleExitGame}
+                    onCancel={() => setConfirmExitOpen(false)}
+                    confirmText="Sair do Jogo"
+                />
+                <div className="absolute top-4 right-6 flex items-center gap-2 md:gap-3 z-20">
+                    <button 
+                        onClick={() => setConfirmExitOpen(true)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-black tracking-wider shadow-lg transition-colors border border-red-400"
+                    >
+                        SAIR
+                    </button>
+                    {totalQuestions > 0 && (
+                        <span className="bg-white/20 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-black tracking-wider border border-white/30">
                             {currentQuestionNumber} de {totalQuestions}
                         </span>
-                    </div>
-                )}
+                    )}
+                </div>
                 <div className={`w-32 h-32 ${selectedAnswer !== null ? COLORS[selectedAnswer] : 'bg-white/10'} rounded-3xl flex items-center justify-center mb-8 shadow-2xl animate-bounce border-4 border-white/20`}>
                     <span translate="no" className="text-7xl font-black">
                         {selectedAnswer !== null ? SYMBOLS[selectedAnswer] : '✔'}
@@ -294,13 +316,28 @@ export default function PlayerGame() {
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50">
-            <div className="p-5 bg-white shadow-md flex justify-between items-center px-8 border-b-4 border-slate-100">
-                <span className="font-black text-[var(--arena-primary)] bg-slate-100 px-4 py-2 rounded-xl uppercase tracking-widest text-sm">Arena - Questão</span>
-                {totalQuestions > 0 && (
-                    <span className="bg-[var(--arena-primary)] text-white px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-lg">
-                        {currentQuestionNumber} de {totalQuestions}
-                    </span>
-                )}
+            <ConfirmModal 
+                isOpen={confirmExitOpen}
+                message="Tem certeza que deseja sair do jogo? Suas respostas não serão mais contabilizadas."
+                onConfirm={handleExitGame}
+                onCancel={() => setConfirmExitOpen(false)}
+                confirmText="Sair do Jogo"
+            />
+            <div className="p-4 md:p-5 bg-white shadow-md flex justify-between items-center px-4 md:px-8 border-b-4 border-slate-100">
+                <span className="font-black text-[var(--arena-primary)] bg-slate-100 px-3 py-2 rounded-xl uppercase tracking-widest text-[10px] md:text-sm">Arena - Questão</span>
+                <div className="flex items-center gap-2 md:gap-3">
+                    <button 
+                        onClick={() => setConfirmExitOpen(true)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-black tracking-wider shadow-lg transition-colors border border-red-400"
+                    >
+                        SAIR
+                    </button>
+                    {totalQuestions > 0 && (
+                        <span className="bg-[var(--arena-primary)] text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-black tracking-wider shadow-lg">
+                            {currentQuestionNumber} de {totalQuestions}
+                        </span>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 grid grid-cols-2 gap-4 p-4">

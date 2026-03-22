@@ -5,6 +5,7 @@ import { useSocket } from '@/lib/useSocket';
 import { useRouter } from 'next/navigation';
 import QRCode from 'react-qr-code';
 import * as XLSX from 'xlsx';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function HostGame() {
     const [phase, setPhase] = useState('QUESTION'); // QUESTION, RESULTS, RANKING, FINAL
@@ -20,6 +21,7 @@ export default function HostGame() {
     const [isLastQuestion, setIsLastQuestion] = useState(false);
     const [joinUrl, setJoinUrl] = useState('');
     const [pin, setPin] = useState('');
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null }); // 'end' ou 'skip'
     const { socket } = useSocket();
     const router = useRouter();
 
@@ -104,10 +106,16 @@ export default function HostGame() {
         }
     };
 
-    const handleEndGame = () => {
-        if (confirm('Tem certeza que deseja encerrar o jogo agora?')) {
+    const handleEndGame = () => setConfirmModal({ isOpen: true, type: 'end' });
+    const handleSkipQuestion = () => setConfirmModal({ isOpen: true, type: 'skip' });
+
+    const handleConfirmAction = () => {
+        if (confirmModal.type === 'end') {
             socket.emit('endGame');
+        } else if (confirmModal.type === 'skip') {
+            socket.emit('skipQuestion');
         }
+        setConfirmModal({ isOpen: false, type: null });
     };
 
     const downloadReport = () => {
@@ -196,6 +204,14 @@ export default function HostGame() {
     if (phase === 'RANKING') {
         return (
             <div className="min-h-screen bg-[var(--arena-primary-dark)] flex flex-col p-8">
+                <ConfirmModal 
+                    isOpen={confirmModal.isOpen}
+                    message={confirmModal.type === 'end' ? 'Tem certeza que deseja encerrar o jogo agora?' : 'Deseja encerrar o tempo desta questão e avançar?'}
+                    onConfirm={handleConfirmAction}
+                    onCancel={() => setConfirmModal({ isOpen: false, type: null })}
+                    confirmText={confirmModal.type === 'end' ? "Encerrar" : "Avançar"}
+                    confirmColor={confirmModal.type === 'end' ? "bg-red-500 hover:bg-red-600" : "bg-amber-500 hover:bg-amber-600"}
+                />
                 <div className="flex justify-center items-center gap-4 mb-12">
                     <h2 className="text-4xl font-black text-white text-center uppercase tracking-wider">Classificação Atual</h2>
                     {totalQuestions > 0 && (
@@ -232,6 +248,14 @@ export default function HostGame() {
 
     return (
         <div className="min-h-screen bg-[#dcfce7] flex flex-col font-sans">
+            <ConfirmModal 
+                isOpen={confirmModal.isOpen}
+                message={confirmModal.type === 'end' ? 'Tem certeza que deseja encerrar o jogo agora?' : 'Deseja encerrar o tempo desta questão e avançar?'}
+                onConfirm={handleConfirmAction}
+                onCancel={() => setConfirmModal({ isOpen: false, type: null })}
+                confirmText={confirmModal.type === 'end' ? "Encerrar" : "Avançar"}
+                confirmColor={confirmModal.type === 'end' ? "bg-red-500 hover:bg-red-600" : "bg-amber-500 hover:bg-amber-600"}
+            />
             <div className="p-6 md:p-10 text-center bg-white shadow-lg min-h-[120px] md:min-h-[180px] flex flex-col items-center justify-center border-b-8 border-[var(--arena-primary)] relative">
 
                 {/* Discreet QR Code and PIN for late joiners */}
@@ -253,8 +277,16 @@ export default function HostGame() {
                 )}
 
                 {totalQuestions > 0 && (
-                    <div className="absolute top-4 right-6 md:right-10 flex flex-col items-end gap-2 z-20">
-                        <span className="bg-[var(--arena-primary)] text-white px-4 py-2 rounded-xl text-sm md:text-lg font-black tracking-wider shadow-lg">
+                    <div className="absolute top-4 right-6 md:right-10 flex items-center gap-2 md:gap-3 z-20">
+                        {phase === 'QUESTION' && (
+                            <button 
+                                onClick={handleSkipQuestion}
+                                className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-black tracking-wider shadow-lg transition-colors border border-amber-400"
+                            >
+                                AVANÇAR
+                            </button>
+                        )}
+                        <span className="bg-[var(--arena-primary)] text-white px-3 py-2 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-black tracking-wider shadow-lg">
                             {currentQuestionNumber} de {totalQuestions}
                         </span>
                     </div>

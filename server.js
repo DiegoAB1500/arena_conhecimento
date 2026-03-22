@@ -316,6 +316,29 @@ app.prepare().then(() => {
             showFinalRanking();
         });
 
+        socket.on('skipQuestion', () => {
+            if (gameState.status === 'PLAYING') {
+                console.log('[Game] Host requested to skip the current question timer.');
+                showResults();
+            }
+        });
+
+        socket.on('leaveGame', () => {
+            const playerIndex = gameState.players.findIndex(p => p.id === socket.id);
+            if (playerIndex !== -1) {
+                const player = gameState.players[playerIndex];
+                console.log(`[Leave] Player ${player.name} intentionally left the game.`);
+                
+                if (player.playerId && gameState.disconnectedPlayers[player.playerId]) {
+                    delete gameState.disconnectedPlayers[player.playerId];
+                }
+                
+                gameState.players.splice(playerIndex, 1);
+                io.emit('playerJoined', gameState.players);
+                checkAllPlayersAnswered();
+            }
+        });
+
         socket.on('getGameState', ({ playerId } = {}) => {
             let player = gameState.players.find(p => p.id === socket.id);
             if (!player && playerId) {
